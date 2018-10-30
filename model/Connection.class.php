@@ -1,16 +1,16 @@
 <?php
-
 /* PHP Class for connecting to database
  * AUTHOR: Antony Acosta
- * LAST EDIT: 2018-10-29
+ * LAST EDIT: 2018-10-30
  */
+
 class Connection {
     
     private $connectionString;
     private $user;
     private $password;
     
-    public function __construct($user, $password, $dbname, $host, $charset = "utf-8")
+    public function __construct($user, $password, $dbname, $host, $charset = "utf8")
     {
         $this->connectionString = "mysql:host={$host};dbname={$dbname};charset={$charset}";
         $this->user     = $user;
@@ -22,11 +22,12 @@ class Connection {
         try{
             
             $connection = new PDO($this->connectionString, $this->user, $this->password);
+            $connection->beginTransaction();
             $preparedStatement = $connection->prepare($query);
             
-            if($parameters !== null){
-                foreach($parameters as $key=>$value){
-                    $preparedStatement->bindValue($key,$value);
+            if($params !== null){
+                foreach($params as $key=>$value){
+                    $preparedStatement->bindValue(":{$key}",$value);
                 }
             }
             

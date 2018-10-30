@@ -1,7 +1,7 @@
 <?php  
 /* PHP Class for building SQL queries
  * AUTHOR Mickael Braz de Souza, Modified by Antony Acosta 
- * LAST EDIT: 2018-10-29
+ * LAST EDIT: 2018-10-30
  */
 
 class QueryBuilder 
@@ -11,7 +11,6 @@ class QueryBuilder
     private $primarykey;
     private $foreignkeys = [];   
     private $fields = [];
-    private $params = []; //array_assoc 
 
     public function __construct($table)
     {
@@ -24,7 +23,7 @@ class QueryBuilder
         if($exclude && $fields){
             $fields = array_diff($this->fields, $fields);
         }
-        $this->query = "SELECT ".(($fields) ? implode(", ",$fields) : " * ")." FROM {$this->table}";
+        $this->query = "SELECT ".(($fields) ? implode(", ",$fields) : "*")." FROM {$this->table}";
         
         return $this;
     }
@@ -40,16 +39,16 @@ class QueryBuilder
 
         $this->query.= " VALUES";
 
-        $data = array_map(function($e){
+        $doubledoot = array_map(function($e){
             return ":{$e}";
         }, $data);
 
-        $this->query.="(".implode(", ", $data).")";
+        $this->query.="(".implode(", ", $doubledoot).")";
 
-        return $this;
+        return $data;
     }
 
-    public function update(array $data)//knowing which fields are valid, i can build the query
+    public function update(array $data)
 
     {
         $this->query = "UPDATE {$this->table} SET ";
@@ -73,6 +72,13 @@ class QueryBuilder
         return $this;
     }
     
+    public function whereId($id)
+    {
+        $this->query.= " WHERE {$this->primarykey} = {$id}";
+        
+        return $this;
+    }
+    
     public function getFields() 
     {
         $this->query = "DESCRIBE {$this->table}";
@@ -83,16 +89,20 @@ class QueryBuilder
     public function setPrimaryKey(string $pk)
     {
         $this->primarykey = $pk;
-        
         return $this;
     }
     
     public function setForeignKeys(array $fks)
     {   
         $this->foreignkeys = $fks;
-        
         return $this;
     }
 
+    public function setFields(array $fields)
+    {
+        $this->fields = array_filter($fields,function($e){
+            return $e !== $this->primarykey;
+        });
+    }
 }
 
