@@ -2,7 +2,7 @@
 
 /* PHP Class for managing queries and connecting to database, part of MVC Framework
  * AUTHOR: Antony Acosta
- * LAST EDIT: 2018-10-30
+ * LAST EDIT: 2018-11-08
  */
 class Model {
     
@@ -42,40 +42,50 @@ class Model {
     }
     
     public function delete($id){
-        $this->builder->delete($id);
+        $this->builder->delete()->where($this->builder->tables[0]->pk(),$id);
         return $this->run("rowCount");
         
     }
     
-    public function update(array $data, $whereId){ //array_assoc as $field=>$value
+    public function update(array $data, $id){ //array_assoc as $field=>$value
         $this->builder->update(array_keys($data));
-        $this->builder->whereId($whereId);
+        
+        $this->builder->where($this->builder->tables[0]->pk(),$id);
+        
         return $this->run("rowCount", $data);
     }
     
 
     public function setTable($table){
+        
         $this->builder = new QueryBuilder($table);
         
-        $cols = $this->connection->exec($this->builder->query, "fetchAll");
+        $cols = $this->run("fetchAll");
         
         $pk = array_filter($cols,function($e){
             return $e["Key"] == "PRI";
         });
         
-        $this->builder->setPrimaryKey($pk[0]['Field']);
-        
-        $fks = array_filter($cols,function($e){
-            return $e["Key"]=="MUL";
-        });
-        
-        $this->builder->setForeignKeys(array_map(function($e){
-            return $e["Field"];
-        }, $fks));
-        
-        $this->builder->setFields(array_map(function($e){
+        $this->builder->tables[0]->setPk($pk[0]['Field']);
+           
+        $this->builder->tables[0]->setFields(array_map(function($e){
             return $e["Field"];
         }, $cols));
+        
+        $this->builder->getFks(0);
+        
+        $cols = $this->run("fetchAll");
+        
+        $fkskeys = array_map(function($e){
+            return $e["COLUMN_NAME"];
+        },$cols);
+        
+        $fksvalues = array_map(function($e){
+            return $e["REFERENCED_TABLE_NAME"];
+        },$cols);
+        
+        $this->builder->tables[0]->setFks(array_combine($fkskeys,$fksvalues));
+        
         
     }
     
