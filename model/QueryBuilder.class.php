@@ -1,7 +1,7 @@
 <?php  
 /* PHP Class for building SQL queries
  * AUTHOR Mickael Braz de Souza, Modified by Antony Acosta 
- * LAST EDIT: 2018-11-08
+ * LAST EDIT: 2018-11-12
  */
 
 class QueryBuilder 
@@ -20,37 +20,27 @@ class QueryBuilder
         $this->getFields(0);
     }
 
-    public function select(array $fields = [], $tables = [0]) //fields is a bidimensional array in format tableindex=>Array[fields]
+    public function select(array $fields = []) //fields is a bidimensional array in format tableindex=>Array[fields] OR just array with field names of main table
     {   
-        if(count($tables) == 1){
-            $table = $tables[0];
-            
-            if(array_key_exists($table, $fields)){
-               $fields = $fields[$table]; 
-            }
-            $this->query = "SELECT ".(($fields) ? implode(", ",$fields) : "*")." FROM {$this->tables[$table]->name} ";
-            
-        }elseif(count($tables > 1)){
-            $stringfields = "";
-            
-            foreach($tables as $table){
-                $currentTableFields = array_intersect($fields[$table],$this->tables[$table]->fields);
-                
-                if($currentTableFields){
-                    $currentTableFields = array_map(function($e){
+        $parsedfields = [];
+        if($fields){
+             foreach($fields as $table=>$field){
+                if(is_array($field)){
+                    $parsedfields[] = array_map(function($e){
                         return "{$this->tables[$table]->name}.{$e}";
-                    }, $currentTableFields);
-                    
-                    $stringfields.= implode(", ",$currentTableFields);
+                    },$field);
                 }else{
-                    $stringfields.= " {$this->tables[$table]->name}.* ";
-                }                
+                    $parsedfields[] = "{$this->tables[0]->name}.{$field}";
+                }
             }
-            
-            $this->query = "SELECT {$stringfields} FROM {$this->tables[$table[0]]->name}"; 
-            //$table[0] is always the main table
-            //STILL NEEDS TO DO JOIN
+            $stringfields = implode($parsedfields);
+        }else{
+            $stringfields = "*";
         }
+        
+        $this->query = "SELECT {$stringfields} FROM {$this->tables[0]->name}"; 
+        //is always the main table
+        //STILL NEEDS TO DO JOIN
         
         return $this;
     }
@@ -116,9 +106,9 @@ class QueryBuilder
     {   //makes a $type join takin $table1's fk that references $table2's pk
         $type = strtoupper($type); 
         
-        $fk = $this->tables[$table1]->name . $this->tables[$table1]->fk($this->tables[$table2]->name );
+        $fk = $this->tables[$table1]->name .".". $this->tables[$table1]->fk($this->tables[$table2]->name );
         
-        $pk = $this->tables[$table2]->name . $this->tables[$table2]->pk();
+        $pk = $this->tables[$table2]->name .".". $this->tables[$table2]->pk();
         
         $this->query.= " {$type} JOIN {$this->tables[$table2]->name} ON {$fk} = {$pk}";
         
