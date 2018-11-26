@@ -1,2 +1,2 @@
 # MVC
-Model-View-Controller Framework coded by myself and @mickael2001-dev
+Model-View-Controller Framework done almost-all by myself, with some contributions made by @themickael001
