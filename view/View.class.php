@@ -16,41 +16,56 @@ class View {
             $config = parse_ini_file("config.ini");
         } 
         $this->vendor = $config['vendor'];
-        $this->sources = $config['sources'];
+        $this->sources = __DIR__."/".$config['sources'];
         
     }
     
-    public function setPageStructure($struct)
+    public function setPageStructure(string $page, $struct=[])
     {
-        if(is_array($struct)){
-            $this->structs[] = $struct; 
-        }
-   
-        elseif(is_string($struct)){
-            if(file_exists($struct)){
-                $file = file_get_contents($struct);
+        if($struct === []){
+            if(file_exists("{$this->sources}{$page}.struct.json")){
+                $file = file_get_contents("{$this->sources}{$page}.struct.json");
             }
-            
-            elseif(file_exists("{$struct}.json")){
-                $file = file_get_contents("{$struct}.json");
-            }
-            $this->structs[] = json_decode($file);
-        }
-    }
-    
-    public function loadPage($page)
-    {
-        if(isset($this->structs[$page])){
-            foreach($this->structs[$page] as $p){
-                include_once "{$this->sources}{$page}/{$p}";
-            }
+            $this->structs[$page] = json_decode($file);
         }
         else{
-            include_once "{$this->sources}{$page}/index.php";
+            $this->structs[$page] = $struct;
         }
     }
     
+    public function loadPage($page,$data)
+    {
+        if(!isset($this->structs[$page])){
+            $this->setPageStructure($page);           
+        }
+        foreach($this->structs[$page]->headers as $p){
+            if($p !== ""){
+                include_once "{$this->sources}{$p}";
+            }
+        }
+        foreach($this->structs[$page]->pages as $p){
+            if($p !== ""){
+                include_once "{$this->sources}{$p}";
+            }
+        }
+        foreach($this->structs[$page]->footers as $p){
+            if($p !== ""){
+                include_once "{$this->sources}{$p}";
+            }      
+        }
+    }
     
+    /*
+        $page.struct.json format:
+     * {
+     *  headers:[file1.php,file2,php,file3.php]
+     *  pages:[file4.php,file5.php]
+     *  footers:[file6.php]
+     * }
+     *      
+
+   
+     * Page sources in  $this->sources folder   */
     
 }
 

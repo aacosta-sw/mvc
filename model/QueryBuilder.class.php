@@ -1,7 +1,7 @@
 <?php  
 /* PHP Class for building SQL queries
  * AUTHOR Mickael Braz de Souza, Modified by Antony Acosta 
- * LAST EDIT: 2018-11-12
+ * LAST EDIT: 2018-11-26
  */
 
 class QueryBuilder 
@@ -20,26 +20,39 @@ class QueryBuilder
         $this->getFields(0);
     }
 
-    public function select(array $fields = []) //fields is a bidimensional array in format tableindex=>Array[fields] OR just array with field names of main table
+    public function getTableIndex($name)
+    {
+        for($i=0; $i<count($this->tables); $i++){
+            if($this->tables[$i]->name == $name){
+                return $i;
+            }
+        }
+    }
+        
+    public function select(array $fields = []) //fields is a bidimensional array in format tableindex=>Array[fields] OR just array with field names of main table OR bidimensional array in format tablename=>Array[fields] 
     {   
+        $currentTable = 0;
         $parsedfields = [];
         if($fields){
              foreach($fields as $table=>$field){
+                if(is_string($table)){
+                    $currentTable = $this->getTableIndex($table);
+                }
                 if(is_array($field)){
-                    $parsedfields[] = array_map(function($e){
-                        return "{$this->tables[$table]->name}.{$e}";
-                    },$field);
+                    foreach($field as $f){
+                        $parsedfields[] = "{$this->tables[$currentTable]->name}.{$f}";
+                    }
                 }else{
                     $parsedfields[] = "{$this->tables[0]->name}.{$field}";
                 }
             }
-            $stringfields = implode($parsedfields);
+            $stringfields = implode($parsedfields, ", ");
         }else{
             $stringfields = "*";
         }
         
         $this->query = "SELECT {$stringfields} FROM {$this->tables[0]->name}"; 
-        //is always the main table
+        //$this->tables[0] is always the main table
         //STILL NEEDS TO DO JOIN
         
         return $this;
@@ -91,9 +104,7 @@ class QueryBuilder
     public function where($field, $value, int $table = 0, string $operator = "=")
     {
         if($this->tables[$table]->field($field) && $this->tables[$table]->pk() !== $field)
-        {   echo "<pre>";
-            var_dump($this->tables[$table]->fields);
-            echo "</pre>";
+        {  
             return false;
         }
         
@@ -102,9 +113,13 @@ class QueryBuilder
         return $this;
     }
     
-    public function join(string $type, int $table2, int $table1 = 0)
-    {   //makes a $type join takin $table1's fk that references $table2's pk
+    public function join(string $type, $table2)
+    {   //makes a $type join taking $table1's fk that references $table2's pk
         $type = strtoupper($type); 
+        
+        $table2 = (is_string($table2)) ? $this->getTableIndex($table2) : $table2;
+        $table1 = 0;
+        
         
         $fk = $this->tables[$table1]->name .".". $this->tables[$table1]->fk($this->tables[$table2]->name );
         

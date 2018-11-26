@@ -2,7 +2,7 @@
 
 /* PHP Class for managing queries and connecting to database, part of MVC Framework
  * AUTHOR: Antony Acosta
- * LAST EDIT: 2018-11-12
+ * LAST EDIT: 2018-11-26
  */
 class Model {
     
@@ -118,12 +118,13 @@ class Model {
         return $index;
     }
     
-    public function join(array $fields, int $maintable, string $type = "inner"){
+    public function join(array $fields, string $type = "inner"){ //fields is an array assoc in format tablename=>Array[fields]
+        
         $this->builder->select($fields);
+        array_shift($fields);
         foreach(array_keys($fields) as $t){
-            $this->builder->join($type, $t, $maintable);
+            $this->builder->join($type, $t);
         }
-        echo $this->builder->query;
         return $this->run("fetchAll");
         
     }
