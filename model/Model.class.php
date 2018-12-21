@@ -2,7 +2,7 @@
 
 /* PHP Class for managing queries and connecting to database, part of MVC Framework
  * AUTHOR: Antony Acosta
- * LAST EDIT: 2018-11-26
+ * LAST EDIT: 2018-12-21
  */
 class Model {
     
