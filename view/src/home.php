@@ -6,6 +6,13 @@
  * and open the template in the editor.
 */
 
+echo "<hr>";
+echo "<pre>";
+var_dump($data);
+echo "</pre>";
+echo "<hr>";
+
+
 echo "SELECT (fetchAll)";
 echo "<pre>";
 var_dump($data['select']);
