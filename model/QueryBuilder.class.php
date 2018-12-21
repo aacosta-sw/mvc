@@ -1,25 +1,29 @@
 <?php  
 /* PHP Class for building SQL queries
- * AUTHOR Mickael Braz de Souza, Modified by Antony Acosta 
- * LAST EDIT: 2018-11-26
+ * AUTHOR Antony Acosta
+ * LAST EDIT: 2018-12-20
  */
 
 class QueryBuilder 
 {
     public $query = "";
     public $tables = [];
+    public $primarytable = "";
     
     public function __construct($primarytable)
     {
         if($primarytable instanceof Table){
-            $this->tables[0] = $primarytable;
+            $this->tables[$primarytable->name] = $primarytable;
+            $this->primarytable = $primarytable->name;
         }else{
-            $this->tables[0] = new Table($primarytable);
+            $this->tables[$primarytable] = new Table($primarytable);
+            $this->primarytable = $primarytable;
         }
         
-        $this->getFields(0);
+        $this->getFields($primarytable);
     }
 
+    //ESTE MÉTODO TEM QUE MORRER
     public function getTableIndex($name)
     {
         for($i=0; $i<count($this->tables); $i++){
@@ -29,37 +33,36 @@ class QueryBuilder
         }
     }
         
-    public function select(array $fields = []) //fields is a bidimensional array in format tableindex=>Array[fields] OR just array with field names of main table OR bidimensional array in format tablename=>Array[fields] 
+    public function select(array $fields = []) //fields is a bidimensional array in format table=>Array[fields] OR just array with field names of main table
     {   
-        $currentTable = 0;
         $parsedfields = [];
         if($fields){
              foreach($fields as $table=>$field){
-                if(is_string($table)){
-                    $currentTable = $this->getTableIndex($table);
-                }
                 if(is_array($field)){
+
                     foreach($field as $f){
-                        $parsedfields[] = "{$this->tables[$currentTable]->name}.{$f}";
+                        $parsedfields[] = "{$this->tables[$table]->name}.{$f}";
                     }
+
                 }else{
-                    $parsedfields[] = "{$this->tables[0]->name}.{$field}";
+                    $parsedfields[] = "{$this->tables[$this->primarytable]->name}.{$field}";
                 }
+
             }
             $stringfields = implode($parsedfields, ", ");
         }else{
             $stringfields = "*";
         }
         
-        $this->query = "SELECT {$stringfields} FROM {$this->tables[0]->name}"; 
-        //$this->tables[0] is always the main table
+        $this->query = "SELECT {$stringfields} FROM {$this->tables[$this->primarytable]->name}"; 
         //STILL NEEDS TO DO JOIN
-        
         return $this;
     }
     
-    public function insert(array $data, int $table = 0)
-    {
+    public function insert(array $data, string $table = "")
+    {   
+        //if table empty, set primary;
+        $table = ($table === "") ? $this->primarytable : $table;
         //check valid fields
         $data = array_intersect($this->tables[$table]->fields, $data);
         
@@ -78,8 +81,11 @@ class QueryBuilder
         return $data;
     }
 
-    public function update(array $data, int $table = 0)
+    public function update(array $data, string $table = "")
     {
+        //if table empty, set primary;
+        $table = ($table === "") ? $this->primarytable : $table;
+
         $this->query = "UPDATE {$this->tables[$table]->name} SET ";
 
         //check valid fields
@@ -89,20 +95,24 @@ class QueryBuilder
                 $this->query.="{$field} = :{$field}, ";
         }
 
-        $this->query = substr($this->query, 0, -2);
+        $this->query = substr($this->query, 0, -2);  
 
         return $this;
     }
 
-    public function delete(int $table = 0)
+    public function delete(string $table = "")
     {
+        //if table empty, set primary;
+        $table = ($table === "") ? $this->primarytable : $table;
+
         $this->query = "DELETE FROM {$this->tables[$table]->name}";
 
         return $this;
     }
     
-    public function where($field, $value, int $table = 0, string $operator = "=")
+    public function where($field, $value, string $table = "", string $operator = "=")
     {
+        $table = ($table === "") ? $this->primarytable : $table;
         if($this->tables[$table]->field($field) && $this->tables[$table]->pk() !== $field)
         {  
             return false;
@@ -113,31 +123,32 @@ class QueryBuilder
         return $this;
     }
     
-    public function join(string $type, $table2)
-    {   //makes a $type join taking $table1's fk that references $table2's pk
+    public function join(string $type,string $table2)
+    {   //makes a $type join taking $table1's fk that references $table2's pk or vice-versa
         $type = strtoupper($type); 
-        
-        $table2 = (is_string($table2)) ? $this->getTableIndex($table2) : $table2;
-        $table1 = 0;
-        
-        
-        $fk = $this->tables[$table1]->name .".". $this->tables[$table1]->fk($this->tables[$table2]->name );
-        
-        $pk = $this->tables[$table2]->name .".". $this->tables[$table2]->pk();
+        if($this->tables[$this->primarytable]->fk($this->tables[$table2]->name)){
+            $fk = $this->tables[$this->primarytable]->name .".". $this->tables[$this->primarytable]->fk($this->tables[$table2]->name);
+            $pk = $this->tables[$table2]->name .".". $this->tables[$table2]->pk();
+        }elseif($this->tables[$table2]->fk($this->tables[$this->primarytable])){
+            $fk = $this->tables[$table2]->name .".". $this->tables[$table2]->fk($this->tables[$this->primarytable]->name);
+            $pk = $this->tables[$this->primarytable]->name .".". $this->tables[$this->primarytable]->pk();
+        }else{
+            return false;
+        }
         
         $this->query.= " {$type} JOIN {$this->tables[$table2]->name} ON {$fk} = {$pk}";
         
         return $this;
     }
     
-    public function getFields(int $table) 
+    public function getFields(string $table) 
     {
         $this->query = "DESCRIBE {$this->tables[$table]->name}";     
         
         return $this;
     }
     
-    public function getFks(int $table)
+    public function getFks(string $table)
     {
             $this->query = "SELECT REFERENCED_TABLE_NAME, COLUMN_NAME "
             . "FROM information_schema.KEY_COLUMN_USAGE "
@@ -148,14 +159,13 @@ class QueryBuilder
     public function addTable($tablename)
     {
         if($tablename instanceof Table){
-            $this->tables[] = $tablename;
+            $this->tables[$tablename->name] = $tablename;
         }else{
-            $this->tables[] = new Table($tablename);
+            $this->tables[$tablename] = new Table($tablename);
         }
-        $tableindex = count($this->tables)-1;
-        $this->getFields($tableindex);
+        $this->getFields($tablename);
         
-        return $tableindex;
+        return $this;
     }
     
 }

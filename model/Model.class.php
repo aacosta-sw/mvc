@@ -42,7 +42,7 @@ class Model {
     }
     
     public function delete($id){
-        $this->builder->delete()->where($this->builder->tables[0]->pk(),$id);
+        $this->builder->delete()->where($this->builder->tables[$this->builder->primarytable]->pk(),$id);
         return $this->run("rowCount");
         
     }
@@ -50,7 +50,7 @@ class Model {
     public function update(array $data, $id){ //array_assoc as $field=>$value
         $this->builder->update(array_keys($data));
         
-        $this->builder->where($this->builder->tables[0]->pk(),$id);
+        $this->builder->where($this->builder->tables[$this->builder->primarytable]->pk(),$id);
         
         return $this->run("rowCount", $data);
     }
@@ -65,13 +65,13 @@ class Model {
             return $e["Key"] == "PRI";
         });
         
-        $this->builder->tables[0]->setPk($pk[0]['Field']);
+        $this->builder->tables[$this->builder->primarytable]->setPk($pk[0]['Field']);
            
-        $this->builder->tables[0]->setFields(array_map(function($e){
+        $this->builder->tables[$this->builder->primarytable]->setFields(array_map(function($e){
             return $e["Field"];
         }, $cols));
         
-        $this->builder->getFks(0);
+        $this->builder->getFks($this->builder->primarytable);
         
         $cols = $this->run("fetchAll");
         
@@ -83,12 +83,12 @@ class Model {
             return $e["REFERENCED_TABLE_NAME"];
         },$cols);
         
-        $this->builder->tables[0]->setFks(array_combine($fkskeys,$fksvalues));
+        $this->builder->tables[$this->builder->primarytable]->setFks(array_combine($fkskeys,$fksvalues));
         
         
     }
     public function addTable(string $table){
-        $index = $this->builder->addTable($table);
+        $this->builder->addTable($table);
         
         $cols = $this->run("fetchAll");
         
@@ -96,12 +96,12 @@ class Model {
             return $e["Key"] == "PRI";
         });
         
-        $this->builder->tables[$index]->setPk($pk[0]["Field"]);
-        $this->builder->tables[$index]->setFields(array_map(function($e){
+        $this->builder->tables[$table]->setPk($pk[0]["Field"]);
+        $this->builder->tables[$table]->setFields(array_map(function($e){
             return $e["Field"];
         }, $cols));
         
-        $this->builder->getFks($index);
+        $this->builder->getFks($table);
         
         $cols = $this->run("fetchAll");
         
@@ -113,9 +113,9 @@ class Model {
             return $e["REFERENCED_TABLE_NAME"];
         },$cols);
         
-        $this->builder->tables[$index]->setFks(array_combine($fkskeys,$fksvalues));
+        $this->builder->tables[$table]->setFks(array_combine($fkskeys,$fksvalues));
         
-        return $index;
+        return $this;
     }
     
     public function join(array $fields, string $type = "inner"){ //fields is an array assoc in format tablename=>Array[fields]
