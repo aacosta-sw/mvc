@@ -23,27 +23,32 @@ class Model {
             $this->setTable($table);
         }
     }
+
+    public function query($query, $callback, $params = null){
+        $this->builder->query = $query;
+        return $this->run($callback, $params);
+    }
     
-    private function run($callback, $params = null){
+    public function run($callback, $params = null){
         return $this->connection->exec($this->builder->query,$callback,$params);
     }
     
     
     public function select(array $fields = []){
         $this->builder->select($fields);
-        return $this->run("fetchAll");
+        return $this;
     }
     
     public function insert(array $data = []){ //array assoc as $field=>$value
         $validfields = $this->builder->insert(array_keys($data));
         $validfields = array_flip($validfields);
         $data = array_intersect_key($data, $validfields);
-        return $this->run("lastInsertId",$data);
+        return $this;
     }
     
     public function delete($id){
         $this->builder->delete()->where($this->builder->tables[$this->builder->primarytable]->pk(),$id);
-        return $this->run("rowCount");
+        return $this;
         
     }
     
@@ -52,7 +57,12 @@ class Model {
         
         $this->builder->where($this->builder->tables[$this->builder->primarytable]->pk(),$id);
         
-        return $this->run("rowCount", $data);
+        return $this;
+    }
+
+    public function where($field, $value, string $operator = "=", string $table = ""){
+        $this->builder->where($field, $value, $operator, $table);
+        return $this;
     }
 
     public function setTable($table){
@@ -125,7 +135,7 @@ class Model {
         foreach(array_keys($fields) as $t){
             $this->builder->join($type, $t);
         }
-        return $this->run("fetchAll");
+        return $this;
         
     }
     

@@ -17,13 +17,16 @@ class Home extends Controller{
     
     public function index()
     {   
-        $insert = $this->model->insert(["UserID"=>"1", "ComicID"=>"1", "Rating"=>"10","Content"=>"very nice"]);
+        $insertdata = ["UserID"=>"1", "ComicID"=>"1", "Rating"=>"10","Content"=>"very nice"];
+        $updatedata = ["UserID"=>"2", "ComicID"=>"2", "Rating"=>"5","Content"=>"not so nice"];
+        $insert = $this->model->insert($insertdata)->run("lastInsertId", $insertdata);
         $data =[
-            "select"    => $this->model->select(),
+            "select"    => $this->model->select()->run("fetchAll"),
             "insert"    => $insert,
-            "join"      => $this->model->join(["Review"=>["ID","UserID","ComicID","Rating"],"Comic"=>["ComicName","Sinopsis","Genre"]]),
-            "update"    => $this->model->update(["UserID"=>"2", "ComicID"=>"2", "Rating"=>"5","Content"=>"not so nice"], $insert),
-            "delete"    => $this->model->delete($insert)
+            "join"      => $this->model->join(["Review"=>["ID","UserID","ComicID","Rating"],"Comic"=>["ComicName","Sinopsis","Genre"]])->run('fetchAll'),
+            "update"    => $this->model->update($updatedata, $insert)->run("rowCount", $updatedata),
+            "delete"    => $this->model->delete($insert)->run("rowCount"),
+            "count"     => $this->model->query("SELECT COUNT(*) FROM Review", "fetchAll")
         ];
         $this->view->loadPage("home",$data);
     }

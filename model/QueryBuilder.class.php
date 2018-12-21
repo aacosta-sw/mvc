@@ -110,7 +110,7 @@ class QueryBuilder
         return $this;
     }
     
-    public function where($field, $value, string $table = "", string $operator = "=")
+    public function where($field, $value, string $operator = "=", string $table = "")
     {
         $table = ($table === "") ? $this->primarytable : $table;
         if($this->tables[$table]->field($field) && $this->tables[$table]->pk() !== $field)
