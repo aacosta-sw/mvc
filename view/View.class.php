@@ -15,7 +15,7 @@ class View {
         if(is_null($config)){
             $config = parse_ini_file("config.ini");
         } 
-        $this->vendor = $config['vendor'];
+        $this->vendor = "view/".$config['vendor'];
         $this->sources = __DIR__."/".$config['sources'];
         
     }
@@ -38,6 +38,7 @@ class View {
         if(!isset($this->structs[$page])){
             $this->setPageStructure($page);           
         }
+        $data["title"] = $this->structs[$page]->title; // carrega title do structs
         foreach($this->structs[$page]->headers as $p){
             if($p !== ""){
                 include_once "{$this->sources}{$p}";
@@ -55,6 +56,14 @@ class View {
         }
     }
     
+    public function link($data){
+        // [class, method, param]
+        //to be modified later on, when router gets improved for working better with mvc
+        $link = $_SERVER["SCRIPT_NAME"]."?q=/".implode("/",$data);
+        return $link;
+        
+    }
+
     /*
         $page.struct.json format:
      * {
