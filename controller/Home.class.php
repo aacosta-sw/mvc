@@ -28,7 +28,7 @@ class Home extends Controller{
             "delete"    => $this->model->delete($insert)->run("rowCount"),
             "count"     => $this->model->query("SELECT COUNT(*) FROM Review", "fetchAll")
         ];
-        $this->view->loadPage("home",$data);
+        return $data;
     }
     
 }

@@ -9,8 +9,9 @@ class Controller{
     
     protected $model;
     protected $view;
+    protected $router;
    
-    public function __construct($inipath = __DIR__."/config.ini")
+    public function __construct($collector = null, $inipath = __DIR__."/config.ini")
     {
         $config = ["View"=>null, "Model"=>null];
         if(file_exists($inipath)){
@@ -20,5 +21,20 @@ class Controller{
         }
         $this->view = new View($config["View"]);
         $this->model = new Model($config["Model"]);
+        if($collector !== null && $collector instanceof Collector){
+            $this->router = new Router($collector);
+        }
+    }
+    
+    public function dispatch($query){
+        $return = $this->router->resolve($query);
+        extract($return);
+
+        // echo "<pre>";
+        // var_dump($return);
+        // echo "</pre>";
+        // die();
+        
+        $this->view->loadPageFromStruct($load, $data);
     }
 }

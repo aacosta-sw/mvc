@@ -1,4 +1,5 @@
 {
+    "title" : "Home Page",
     "headers": [],
     "pages": ["home.php"],
     "footers": []

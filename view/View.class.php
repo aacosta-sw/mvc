@@ -25,6 +25,8 @@ class View {
         if($struct === []){
             if(file_exists("{$this->sources}{$page}.struct.json")){
                 $file = file_get_contents("{$this->sources}{$page}.struct.json");
+            }elseif(file_exists("{$this->sources}{$page}.json")){
+                $file = file_get_contents("{$this->sources}{$page}.json");
             }
             $this->structs[$page] = json_decode($file);
         }
@@ -33,7 +35,7 @@ class View {
         }
     }
     
-    public function loadPage($page,$data)
+    public function loadPageFromStruct($page,$data)
     {
         if(!isset($this->structs[$page])){
             $this->setPageStructure($page);           
