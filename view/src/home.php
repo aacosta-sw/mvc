@@ -27,12 +27,6 @@ echo "</pre>";
 echo "<hr>";
 
 
-echo "JOIN with COMIC (fetchAll)";
-echo "<pre>";
-var_dump($data['join']);
-echo "</pre>";
-echo "<hr>";
-
 echo "UPDATE (rowCount)";
 echo "<pre>";
 var_dump($data['update']);

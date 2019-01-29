@@ -11,22 +11,20 @@ class Home extends Controller{
     public function __construct()
     {
         parent::__construct();
-        $this->model->setTable("Review");
-        $this->model->addTable("Comic");
+        $this->model->setTable("itens");
     }
     
     public function index()
     {   
-        $insertdata = ["UserID"=>"1", "ComicID"=>"1", "Rating"=>"10","Content"=>"very nice"];
-        $updatedata = ["UserID"=>"2", "ComicID"=>"2", "Rating"=>"5","Content"=>"not so nice"];
+        $insertdata = ["nome"=>"Asdemiro Rodrigues", "turma"=>"SER2", "descricao"=>"de lorem ipsum"];
+        $updatedata = ["turma"=>"info4"];
         $insert = $this->model->insert($insertdata)->run("lastInsertId", $insertdata);
         $data =[
             "select"    => $this->model->select()->run("fetchAll"),
             "insert"    => $insert,
-            "join"      => $this->model->join(["Review"=>["ID","UserID","ComicID","Rating"],"Comic"=>["ComicName","Sinopsis","Genre"]])->run('fetchAll'),
             "update"    => $this->model->update($updatedata, $insert)->run("rowCount", $updatedata),
             "delete"    => $this->model->delete($insert)->run("rowCount"),
-            "count"     => $this->model->query("SELECT COUNT(*) FROM Review", "fetchAll")
+            "count"     => $this->model->query("SELECT COUNT(*) FROM itens", "fetchAll")
         ];
         return $data;
     }

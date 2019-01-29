@@ -174,7 +174,7 @@ class Collector{
                 if(isset($after)){
                     $this->filters[$after]();
                 }
-                $d["load"] = "{$classname}_{$method}.struct";
+                $d["load"] = "{$classname}_{$method}";
                 return $d; //return autoloaded struct ($d['load']) + processed data ($d['data'])
             }
         }else{

@@ -1,0 +1,23 @@
+{
+    "Home":{
+        "default":{
+            "title": "Home",
+            "headers": [],
+            "pages": ["home.php"],
+            "footers": []
+        },
+        "index": {
+            "title": "Home Page",
+            "headers": [],
+            "pages": ["home.php"],
+            "footers": []
+        },
+        "page": {
+            "title": "Page",
+            "headers": [],
+            "pages": ["page.php"],
+            "footers": []
+        }        
+    }
+
+}

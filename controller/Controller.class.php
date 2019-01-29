@@ -28,7 +28,7 @@ class Controller{
     
     public function dispatch($query){
         $return = $this->router->resolve($query);
-        extract($return);
+        extract($return); //cria variaveis com os nomes das chaves do array (Ex: $return['data"=>20] vira $data = 20 )
 
         // echo "<pre>";
         // var_dump($return);
