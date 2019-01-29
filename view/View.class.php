@@ -9,6 +9,8 @@ class View {
     private $vendor;
     private $sources;
     private $structs;
+    private $useSingleFileStruct;
+    private $title;
     
     public function __construct($config = null)
     {
@@ -57,7 +59,7 @@ class View {
         if(!isset($this->structs[$page])){
             $this->setPageStructure($page);           
         }
-        $data["title"] = $this->structs[$page]->title; // carrega title do structs
+        $this->title = $this->structs[$page]->title; // carrega title do structs
         foreach($this->structs[$page]->headers as $p){
             if($p !== ""){
                 include_once "{$this->sources}{$p}";
