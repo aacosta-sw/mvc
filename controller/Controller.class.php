@@ -37,4 +37,14 @@ class Controller{
         
         $this->view->loadPageFromStruct($load, $data);
     }
+	
+	public function redirect($to){
+        if(is_array($to)){
+            $link = $this->view->link($to);
+        }else{
+            $link = $_SERVER["SCRIPT_NAME"]."?q={$to}";
+        }
+
+        header("Location:".$link);
+    }
 }
