@@ -167,12 +167,12 @@ class Collector{
             //extract() takes indexes for naming new variables with the corresponding value
 
             if(isset($before)){
-                $return = $this->filters[$before]();
+                $return = $this->filters[$before](...$args);
             }
             if(is_null($return)){
                 $d["data"] = $class->$method(...$params);
                 if(isset($after)){
-                    $this->filters[$after]();
+                    $this->filters[$after](...$args);
                 }
                 $d["load"] = "{$classname}_{$method}";
                 return $d; //return autoloaded struct ($d['load']) + processed data ($d['data'])
@@ -183,12 +183,12 @@ class Collector{
             }
             if(is_null($return)){   
                 if($args === []){
-                    $this->handlers[$index]["call"]();
+                    $this->handlers[$index]["call"](...$args);
                 }else{
                     $this->handlers[$index]["call"](...$args);
                 }
                 if($this->handlers[$index]["after"] !== null){
-                    $this->filters[$this->handlers[$index]["after"]]();
+                    $this->filters[$this->handlers[$index]["after"]](...$args);
                 }
                 return $this->handlers[$index]["load"];
             }
